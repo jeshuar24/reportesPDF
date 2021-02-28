@@ -5,13 +5,13 @@
 <web-app>
   <display-name>Archetype Created Web Application</display-name>
   <servlet>
-  	<servlet-name>reportePDF</servlet-name>
-  	<display-name>reportePDF</display-name>
+  	<servlet-name>ReportePDF</servlet-name>
+  	<display-name>ReportePDF</display-name>
   	<description></description>
-  	<servlet-class>controller.reportePDF</servlet-class>
+  	<servlet-class>controller.ReportePDF</servlet-class>
   </servlet>
   <servlet-mapping>
-  	<servlet-name>reportePDF</servlet-name>
+  	<servlet-name>ReportePDF</servlet-name>
   	<url-pattern>/reportePDF</url-pattern>
   </servlet-mapping>
 </web-app>
