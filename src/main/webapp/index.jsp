@@ -1,6 +1,6 @@
 <html>
 <body>
-<h2>Hello World!</h2>
+<h2>Búsqueda de ID Cliente</h2>
 <form action="reportePDF">
 		ID de Cliente : <input type="text" name="cliente"> <br> 
 
