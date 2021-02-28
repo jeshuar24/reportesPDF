@@ -37,24 +37,6 @@ import vo.ClientVO;
 public class ReportePDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final static Logger LOGGER = Logger.getLogger(ReportePDF.class.getName());
-	public static HashMap<String, String> etiquetas;
-	static {
-		etiquetas = new HashMap<String, String>();
-		etiquetas.put("client.name", "nombre");
-		etiquetas.put("client.first_last_name", "apellido1");
-		etiquetas.put("client.sec_last_name", "apellido2");
-	}
-	public static ArrayList<String> listaObjetos;
-	static {
-		listaObjetos = new ArrayList<String>();
-		listaObjetos.add("client");
-		listaObjetos.add("adressC");
-		listaObjetos.add("job");
-		listaObjetos.add("adressJ");
-		listaObjetos.add("references");
-		listaObjetos.add("product");
-		listaObjetos.add("bank");
-	}
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
@@ -152,14 +134,11 @@ public class ReportePDF extends HttpServlet {
 				response.setContentLength(baos.size());
 				response.addHeader("Access-Control-Allow-Origin", "true");
 				OutputStream os = response.getOutputStream();
-				System.out.println("escritura");
 				baos.writeTo(os);
 				os.flush();
-				System.out.println("confirmar");
 				os.close();
-			} catch (Exception de) {
-				System.out.println("error escritura");
-				System.out.println(de);
+			} catch (Exception e) {
+				LOGGER.info("Error al mostrar el reporte PDF" + e);
 			}
 		} catch (Exception e) {
 			LOGGER.info("Error al llenar el reporte PDF" + e);
