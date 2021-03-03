@@ -11,12 +11,51 @@ public class ReferencesVO {
 	private Long id;
 	private Long client_id;
 	private String name;
+	private String name2;
+	private String first_last_name;
+	private String sec_last_name;
 	private String nacionality;
 	private Long birth;
 	private String phone;
 	private String relationship;
 	private String known;
 	private boolean status;
+	/**
+	 * @return the name2
+	 */
+	public String getName2() {
+		return name2;
+	}
+	/**
+	 * @param name2 the name2 to set
+	 */
+	public void setName2(String name2) {
+		this.name2 = name2;
+	}
+	/**
+	 * @return the first_last_name
+	 */
+	public String getFirst_last_name() {
+		return first_last_name;
+	}
+	/**
+	 * @param first_last_name the first_last_name to set
+	 */
+	public void setFirst_last_name(String first_last_name) {
+		this.first_last_name = first_last_name;
+	}
+	/**
+	 * @return the sec_last_name
+	 */
+	public String getSec_last_name() {
+		return sec_last_name;
+	}
+	/**
+	 * @param sec_last_name the sec_last_name to set
+	 */
+	public void setSec_last_name(String sec_last_name) {
+		this.sec_last_name = sec_last_name;
+	}
 	/**
 	 * @return the id
 	 */

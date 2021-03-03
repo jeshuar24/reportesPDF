@@ -1,4 +1,4 @@
-package controller;
+ package controller;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -354,6 +354,9 @@ public class ReportePDF extends HttpServlet {
 		referencias.setKnown(String.valueOf(valores.get("know")));
 		referencias.setNacionality(String.valueOf(valores.get("nacionality")));
 		referencias.setName(String.valueOf(valores.get("name")));
+		referencias.setName2(String.valueOf(valores.get("name2")));
+		referencias.setFirst_last_name(String.valueOf(valores.get("first_last_name")));
+		referencias.setSec_last_name(String.valueOf(valores.get("sec_last_name")));
 		referencias.setPhone(String.valueOf(valores.get("phone")));
 		referencias.setRelationship(String.valueOf(valores.get("relationship")));
 		referencias.setStatus((String.valueOf(valores.get("status")).equals("1")) ? true : false);
@@ -496,16 +499,16 @@ public class ReportePDF extends HttpServlet {
 	private AcroFields llenarFieldsConyuge(AcroFields fields, ReferencesVO referencesVO)
 			throws IOException, DocumentException {
 		fields.setField("conyuge_nombre", referencesVO.getName());
-		fields.setField("conyuge_nombre2", referencesVO.getName());
-		fields.setField("conyuge_apellido1", referencesVO.getName());
-		fields.setField("conyuge_apellido2", referencesVO.getName());
+		fields.setField("conyuge_nombre2", referencesVO.getName2());
+		fields.setField("conyuge_apellido1", referencesVO.getFirst_last_name());
+		fields.setField("conyuge_apellido2", referencesVO.getSec_last_name());
 		fields.setField("conyuge_nacionalidad", referencesVO.getNacionality());
 		return fields;
 	}
 
 	private AcroFields llenarFieldsReferencias(AcroFields fields, ReferencesVO referencesVO, Long numReferencia)
 			throws IOException, DocumentException {
-		fields.setField("nombre_ref_".concat(numReferencia.toString()), referencesVO.getName());
+		fields.setField("nombre_ref_".concat(numReferencia.toString()), (referencesVO.getName()+ " " + referencesVO.getName2() + " " + referencesVO.getFirst_last_name() + " " + referencesVO.getSec_last_name()));
 		fields.setField("telefono_ref_".concat(numReferencia.toString()), referencesVO.getPhone());
 		fields.setField("relacion_ref_".concat(numReferencia.toString()), referencesVO.getRelationship());
 		fields.setField("tiempo_conocerse_ref_".concat(numReferencia.toString()),
