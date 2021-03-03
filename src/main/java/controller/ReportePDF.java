@@ -33,6 +33,7 @@ import vo.BankVO;
 import vo.ClientVO;
 import vo.JobVO;
 import vo.ProductVO;
+import vo.ReferencesVO;
 
 /**
  * Servlet implementation class ReportePDF
@@ -48,13 +49,21 @@ public class ReportePDF extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String resultJSON = null;
-		HashMap<String, HashMap<String, String>> valorEtiquetas = null;
+		HashMap<String, HashMap<String, Object>> valorEtiquetas = null;
 		ClientVO cliente = null;
 		JobVO job = null;
 		AdressVO direccionTrabajo = null;
 		AdressVO direccionCasa = null;
 		BankVO banco = null;
 		ProductVO producto = null;
+		// Lista para saber el nombre de referencias, guardara reference0, reference1,
+		// .. reference(n)
+		ArrayList<String> referenciasNombre = new ArrayList<String>();
+		// Lista de VO de referencias, para que en un ciclo posterior re itere para
+		// ingresar en la seccion correspondiente del pdf
+		ArrayList<ReferencesVO> referenciasValor = new ArrayList<ReferencesVO>();
+		ReferencesVO referencia = null;
+
 		try {
 			// Obtiene el parametro cliente del request (sistema principal)
 			String idCliente = request.getParameter("cliente");
@@ -82,7 +91,7 @@ public class ReportePDF extends HttpServlet {
 		// Valida que result sea diferente de null y obtiene los nodos del json
 		try {
 			if (resultJSON != null) {
-				valorEtiquetas = new HashMap<String, HashMap<String, String>>();
+				valorEtiquetas = new HashMap<String, HashMap<String, Object>>();
 
 				JSONObject jsonObject = new JSONObject(resultJSON);
 				Map<String, Object> nodosJSON = jsonObject.toMap();
@@ -90,53 +99,109 @@ public class ReportePDF extends HttpServlet {
 				ArrayList<Object> etiquetasList = null;
 				for (Map.Entry<String, Object> entry : nodosJSON.entrySet()) {
 					if (!entry.getKey().equals("references")) {
-						valorEtiquetas.put(entry.getKey(), (HashMap<String, String>) entry.getValue());
+						valorEtiquetas.put(entry.getKey(), (HashMap<String, Object>) entry.getValue());
 					} else {
 						etiquetasList = (ArrayList) entry.getValue();
 						Integer i = 0;
 						Iterator it = etiquetasList.iterator();
 						while (it.hasNext()) {
-							valorEtiquetas.put(entry.getKey().concat(i.toString()),
-									(HashMap<String, String>) it.next());
+							String claveValor = entry.getKey().concat(i.toString());
+							referenciasNombre.add(claveValor);
+							valorEtiquetas.put(claveValor, (HashMap<String, Object>) it.next());
 							i = i + 1;
 						}
 					}
 				}
 			}
-		}catch(Exception e) {
+		} catch (Exception e) {
 			LOGGER.info("Error al obtener la información del json" + e);
 		}
 		try {
-				// Llena el objeto client
-				cliente = llenaClientVO(valorEtiquetas, "client");
-				// Llena el objeto adressC adressJ
-				direccionCasa = llenaAdressVO(valorEtiquetas, "adressC");
-				direccionTrabajo = llenaAdressVO(valorEtiquetas, "adressJ");
-				// Llena el objeto job
-				job = llenaJobVO(valorEtiquetas, "job");
-				// Llena el objeto references
-				// Llena el objeto credit
-				// Llena el objeto product
-				producto = llenaProductVO(valorEtiquetas, "product");
-				// Llena el objeto bank
-				banco = llenaBankVO(valorEtiquetas, "bank");
-
+			// Llena el objeto client
+			cliente = llenaClientVO(valorEtiquetas, "client");
 		} catch (Exception e) {
-			LOGGER.info("Error al llenar los objetos del json a java" + e);
+			LOGGER.info("Error al llenar la informacion de cliente" + e);
 		}
-		//Se llena el PDF con la información obtenida
+		try {
+			// Llena el objeto adressC adressJ
+			direccionCasa = llenaAdressVO(valorEtiquetas, "adressC");
+		} catch (Exception e) {
+			LOGGER.info("Error al llenar la informacion de direccion casa" + e);
+		}
+		try {
+			direccionTrabajo = llenaAdressVO(valorEtiquetas, "adressJ");
+		} catch (Exception e) {
+			LOGGER.info("Error al llenar la informacion de direccion trabajo" + e);
+		}
+		try {
+			// Llena el objeto job
+			job = llenaJobVO(valorEtiquetas, "job");
+		} catch (Exception e) {
+			LOGGER.info("Error al llenar la informacion de trabajo" + e);
+		}
+		try {
+			// Llena los objetos references
+			if (referenciasNombre.size() > 0) {
+				for (String clave : referenciasNombre) {
+					referencia = llenaReferencesVO(valorEtiquetas, clave);
+					referenciasValor.add(referencia);
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.info("Error al llenar la informacion de referencias" + e);
+		}
+		// Llena el objeto credit
+		try {
+			// Llena el objeto product
+			producto = llenaProductVO(valorEtiquetas, "product");
+		} catch (Exception e) {
+			LOGGER.info("Error al llenar la informacion de producto" + e);
+		}
+		try {
+			// Llena el objeto bank
+			banco = llenaBankVO(valorEtiquetas, "bank");
+		} catch (Exception e) {
+			LOGGER.info("Error al llenar la informacion de banco" + e);
+		}
+		// Se llena el PDF con la información obtenida
 		try {
 			InputStream is = getClass().getResourceAsStream("/reports/AtnContract_rellenable.pdf");
 			PdfReader reader = new PdfReader(is, null);
 			ByteArrayOutputStream baos = new ByteArrayOutputStream();
 			PdfStamper stamper = new PdfStamper(reader, baos);
 			AcroFields fields = stamper.getAcroFields();
-			fields = llenarFieldsCliente(fields, cliente);
-			fields = llenarFieldsAdressC(fields, direccionCasa);
-			fields = llenarFieldsJob(fields, job);
-			fields = llenarFieldsAdressJ(fields, direccionTrabajo);
-			fields = llenarFieldsBank(fields, banco);
-			//fields = llenarFieldsProduct(fields, producto);
+			if (cliente != null) {
+				fields = llenarFieldsCliente(fields, cliente);
+			}
+			if (direccionCasa != null) {
+				fields = llenarFieldsAdressC(fields, direccionCasa);
+			}
+			if (direccionTrabajo != null) {
+				fields = llenarFieldsAdressJ(fields, direccionTrabajo);
+			}
+			if (job != null) {
+				fields = llenarFieldsJob(fields, job);
+			}
+			if (banco != null) {
+				fields = llenarFieldsBank(fields, banco);
+			}
+			if (referenciasValor.size() > 0) {
+				// fields = llenarFieldsProduct(fields, producto);
+				// M´etodo para llenar conyuge y referencias activas
+				Long numReferencia = 1L;
+				for (ReferencesVO referencias : referenciasValor) {
+					if (referencias.isStatus()) {
+						if (referencias.getRelationship().equals("CONYUGE")) {
+							fields = llenarFieldsConyuge(fields, referencias);
+						} else {
+							if (numReferencia <= 2) {// Solo son 2 referencias
+								fields = llenarFieldsReferencias(fields, referencias, numReferencia);
+								numReferencia = numReferencia + 1;
+							}
+						}
+					}
+				}
+			}
 			stamper.setFormFlattening(false);
 			stamper.close();
 			try {
@@ -166,119 +231,149 @@ public class ReportePDF extends HttpServlet {
 			throws ServletException, IOException {
 
 	}
-	
-	/////////////////////////////////////////////////////////////////////////////////////LLENAR LOS VALORES DEL JSON
+
+	///////////////////////////////////////////////////////////////////////////////////// LLENAR
+	///////////////////////////////////////////////////////////////////////////////////// LOS
+	///////////////////////////////////////////////////////////////////////////////////// VALORES
+	///////////////////////////////////////////////////////////////////////////////////// DEL
+	///////////////////////////////////////////////////////////////////////////////////// JSON
 	/**
 	 * Método para llenar el VO de acuerdo al nombre del objeto del cliente
+	 * 
 	 * @param valorEtiquetas
 	 * @param identificador
 	 * @return ClientVO
 	 */
-	private ClientVO llenaClientVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
-		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+	private ClientVO llenaClientVO(HashMap<String, HashMap<String, Object>> valorEtiquetas, String identificador) {
+		HashMap<String, Object> valores = valorEtiquetas.get(identificador);
 		ClientVO clientVO = new ClientVO();
 		// clientVO.setId(Long.parseLong(valores.get("id")));
 		// clientVO.setUser_id(Long.parseLong(valores.get("user_id")));
-		clientVO.setBirth(convertirFecha(valores.get("birth")));
-		clientVO.setCellphone(valores.get("cellphone"));
-		clientVO.setContact_schedule(valores.get("contact_schedule"));
-		clientVO.setCurp(valores.get("curp"));
-		clientVO.setEmail(valores.get("email"));
-		clientVO.setFirst_last_name(valores.get("first_last_name"));
-		clientVO.setLiving_there_m(Long.parseLong(valores.get("living_there_m")));
-		clientVO.setLiving_there_y(Long.parseLong(valores.get("living_there_y")));
-		clientVO.setNacionality(valores.get("nacionality"));
-		clientVO.setName(valores.get("name"));
-		clientVO.setName2(valores.get("name2"));
-		clientVO.setPhone(valores.get("phone"));
-		clientVO.setRfc(valores.get("rfc"));
-		clientVO.setSec_last_name(valores.get("sec_last_name"));
-		clientVO.setType_housing(valores.get("type_housing"));
-		clientVO.setCivil_status(valores.get("civil_status"));
-		clientVO.setGender(valores.get("gender"));
-		clientVO.setCountry(valores.get("country"));
-		clientVO.setState(valores.get("state"));
-		clientVO.setFiel(valores.get("fiel"));
+		clientVO.setBirth(convertirFecha(String.valueOf(valores.get("birth"))));
+		clientVO.setCellphone(String.valueOf(valores.get("cellphone")));
+		clientVO.setContact_schedule(String.valueOf(valores.get("contact_schedule")));
+		clientVO.setCurp(String.valueOf(valores.get("curp")));
+		clientVO.setEmail(String.valueOf(valores.get("email")));
+		clientVO.setFirst_last_name(String.valueOf(valores.get("first_last_name")));
+		clientVO.setLiving_there_m(Long.valueOf(String.valueOf((valores.get("living_there_m")))));
+		clientVO.setLiving_there_y(Long.valueOf(String.valueOf((valores.get("living_there_y")))));
+		clientVO.setNacionality(String.valueOf(valores.get("nacionality")));
+		clientVO.setName(String.valueOf(valores.get("name")));
+		clientVO.setName2(String.valueOf(valores.get("name2")));
+		clientVO.setPhone(String.valueOf(valores.get("phone")));
+		clientVO.setRfc(String.valueOf(valores.get("rfc")));
+		clientVO.setSec_last_name(String.valueOf(valores.get("sec_last_name")));
+		clientVO.setType_housing(String.valueOf(valores.get("type_housing")));
+		clientVO.setCivil_status(String.valueOf(valores.get("civil_status")));
+		clientVO.setGender(String.valueOf(valores.get("gender")));
+		clientVO.setCountry(String.valueOf(valores.get("country")));
+		clientVO.setState(String.valueOf(valores.get("state")));
+		clientVO.setFiel(String.valueOf(valores.get("fiel")));
 		return clientVO;
 	}
+
 	/**
 	 * Método para llenar el VO de acuerdo al nombre del objeto del job
+	 * 
 	 * @param valorEtiquetas
 	 * @param identificador
 	 * @return JobVO
 	 */
-	private JobVO llenaJobVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
-		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+	private JobVO llenaJobVO(HashMap<String, HashMap<String, Object>> valorEtiquetas, String identificador) {
+		HashMap<String, Object> valores = valorEtiquetas.get(identificador);
 		JobVO jobVO = new JobVO();
-		jobVO.setDependence(valores.get("dependence"));
-		jobVO.setPlace(valores.get("place"));
-		jobVO.setOccupation(valores.get("occupation"));
-		jobVO.setJob(valores.get("job"));
-        jobVO.setTime_working_y(valores.get("time_working_y"));
-        jobVO.setTime_working_m(valores.get("time_working_m"));
-        jobVO.setType(valores.get("type"));
-        jobVO.setPhone(valores.get("phone"));
-        jobVO.setExtension(valores.get("extension"));
-        jobVO.setPayroll(valores.get("payroll"));
-        jobVO.setIncome(Double.parseDouble(valores.get("income")));
+		jobVO.setDependence(String.valueOf(valores.get("dependence")));
+		jobVO.setPlace(String.valueOf(valores.get("place")));
+		jobVO.setOccupation(String.valueOf(valores.get("occupation")));
+		jobVO.setJob(String.valueOf(valores.get("job")));
+		jobVO.setTime_working_y(String.valueOf(valores.get("time_working_y")));
+		jobVO.setTime_working_m(String.valueOf(valores.get("time_working_m")));
+		jobVO.setType(String.valueOf(valores.get("type")));
+		jobVO.setPhone(String.valueOf(valores.get("phone")));
+		jobVO.setExtension(String.valueOf(valores.get("extension")));
+		jobVO.setPayroll(String.valueOf(valores.get("payroll")));
+		jobVO.setIncome(Double.parseDouble(String.valueOf(valores.get("income"))));
 		return jobVO;
 	}
-	
+
 	/**
-	 *Método para llenar el VO de acuerdo al nombre del objeto de la dirección
+	 * Método para llenar el VO de acuerdo al nombre del objeto de la dirección
+	 * 
 	 * @param valorEtiquetas
-	 * @param identificador (adressC, adressJ)
+	 * @param identificador  (adressC, adressJ)
 	 * @return
 	 */
-	private AdressVO llenaAdressVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
-		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+	private AdressVO llenaAdressVO(HashMap<String, HashMap<String, Object>> valorEtiquetas, String identificador) {
+		HashMap<String, Object> valores = valorEtiquetas.get(identificador);
 		AdressVO adressVO = new AdressVO();
-		adressVO.setStreet(valores.get("street"));
-		adressVO.setNumber(valores.get("number"));
-		adressVO.setInt_number(valores.get("int_number"));
-		adressVO.setSuburb(valores.get("suburb"));
-		adressVO.setCrosses(valores.get("crosses"));
-		adressVO.setState(valores.get("state"));
-		adressVO.setTown(valores.get("town"));
-		adressVO.setContry(valores.get("contry"));
-		adressVO.setPostal_code(Long.parseLong(valores.get("postal_code")));
+		adressVO.setStreet(String.valueOf(valores.get("street")));
+		adressVO.setNumber(String.valueOf(valores.get("number")));
+		adressVO.setInt_number(String.valueOf(valores.get("int_number")));
+		adressVO.setSuburb(String.valueOf(valores.get("suburb")));
+		adressVO.setCrosses(String.valueOf(valores.get("crosses")));
+		adressVO.setState(String.valueOf(valores.get("state")));
+		adressVO.setTown(String.valueOf(valores.get("town")));
+		adressVO.setContry(String.valueOf(valores.get("contry")));
+		adressVO.setPostal_code(Long.parseLong(String.valueOf(valores.get("postal_code"))));
 		return adressVO;
 	}
+
 	/**
 	 * Método para llenar el VO de acuerdo al nombre del objeto del job
+	 * 
 	 * @param valorEtiquetas
 	 * @param identificador
 	 * @return BankVO
 	 */
-	private BankVO llenaBankVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
-		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+	private BankVO llenaBankVO(HashMap<String, HashMap<String, Object>> valorEtiquetas, String identificador) {
+		HashMap<String, Object> valores = valorEtiquetas.get(identificador);
 		BankVO bankVO = new BankVO();
-		bankVO.setAccount(valores.get("account"));
-		bankVO.setBank(valores.get("bank"));
-		bankVO.setClabe(valores.get("clabe"));
+		bankVO.setAccount(String.valueOf(valores.get("account")));
+		bankVO.setBank(String.valueOf(valores.get("bank")));
+		bankVO.setClabe(String.valueOf(valores.get("clabe")));
 		return bankVO;
 	}
-	private ProductVO llenaProductVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
-		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+
+	private ProductVO llenaProductVO(HashMap<String, HashMap<String, Object>> valorEtiquetas, String identificador) {
+		HashMap<String, Object> valores = valorEtiquetas.get(identificador);
 		ProductVO productVO = new ProductVO();
-		productVO.setPromotion(valores.get("promotion"));
-		productVO.setTerm(valores.get("term"));
-		productVO.setTasa(valores.get("tasa"));
-		productVO.setFactor(valores.get("factor"));
-		
+		productVO.setPromotion(String.valueOf(valores.get("promotion")));
+		productVO.setTerm(String.valueOf(valores.get("term")));
+		productVO.setTasa(String.valueOf(valores.get("tasa")));
+		productVO.setFactor(String.valueOf(valores.get("factor")));
+
 		return productVO;
 	}
-	
-	/////////////////////////////////////////////////////////////////////// LLENAR LOS FIELDS DEL REPORTE
+
+	private ReferencesVO llenaReferencesVO(HashMap<String, HashMap<String, Object>> valorEtiquetas,
+			String identificador) {
+		HashMap<String, Object> valores = valorEtiquetas.get(identificador);
+		ReferencesVO referencias = new ReferencesVO();
+		referencias.setBirth(Long.parseLong(String.valueOf(valores.get("birth"))));
+		// referencias.setClient_id(Long.parseLong(valores.get("client_id")));
+		referencias.setKnown(String.valueOf(valores.get("know")));
+		referencias.setNacionality(String.valueOf(valores.get("nacionality")));
+		referencias.setName(String.valueOf(valores.get("name")));
+		referencias.setPhone(String.valueOf(valores.get("phone")));
+		referencias.setRelationship(String.valueOf(valores.get("relationship")));
+		referencias.setStatus((String.valueOf(valores.get("status")).equals("1")) ? true : false);
+		return referencias;
+	}
+
+	/////////////////////////////////////////////////////////////////////// LLENAR
+	/////////////////////////////////////////////////////////////////////// LOS
+	/////////////////////////////////////////////////////////////////////// FIELDS
+	/////////////////////////////////////////////////////////////////////// DEL
+	/////////////////////////////////////////////////////////////////////// REPORTE
 	private AcroFields llenarFieldsCliente(AcroFields fields, ClientVO clientVO) throws IOException, DocumentException {
 
 		fields.setField("nombre", clientVO.getName());
 		fields.setField("nombre2", clientVO.getName2());
-		//FECHA NACIMIENTO DIVIDIDA EN 3 AÑO, MES Y DÍA
-		if(clientVO.fechaNacCalendario()!=null) {
-			fields.setField("fecha_a",String.valueOf(clientVO.fechaNacCalendario().get(Calendar.YEAR)));
-			fields.setField("fecha_m",String.valueOf(clientVO.fechaNacCalendario().get(Calendar.MONTH)+1));
-			fields.setField("fecha_d",String.valueOf(clientVO.fechaNacCalendario().get(Calendar.DAY_OF_MONTH)));
+		// FECHA NACIMIENTO DIVIDIDA EN 3 AÑO, MES Y DÍA
+		if (clientVO.fechaNacCalendario() != null) {
+			fields.setField("fecha_a", String.valueOf(clientVO.fechaNacCalendario().get(Calendar.YEAR)));
+			fields.setField("fecha_m", String.valueOf(clientVO.fechaNacCalendario().get(Calendar.MONTH) + 1));
+			fields.setField("fecha_d", String.valueOf(clientVO.fechaNacCalendario().get(Calendar.DAY_OF_MONTH)));
 		}
 		fields.setField("apellido1", clientVO.getFirst_last_name());
 		fields.setField("apellido2", clientVO.getSec_last_name());
@@ -288,10 +383,10 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("estado", clientVO.getState());
 		fields.setField("genero", clientVO.getFiel());
 		fields.setField("tipo_vivienda", clientVO.getType_housing());
-		if(clientVO.getLiving_there_y() != null) {
+		if (clientVO.getLiving_there_y() != null) {
 			fields.setField("cliente_arraigo_a", String.valueOf(clientVO.getLiving_there_y()));
 		}
-		if(clientVO.getLiving_there_m() != null) {
+		if (clientVO.getLiving_there_m() != null) {
 			fields.setField("cliente_arraigo_m", String.valueOf(clientVO.getLiving_there_m()));
 		}
 		fields.setField("celular", clientVO.getCellphone());
@@ -300,12 +395,13 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("horario_contacto", clientVO.getContact_schedule());
 		fields.setField("rfc", clientVO.getRfc());
 		fields.setField("curp", clientVO.getCurp());
-		if(clientVO.getFiel() != null) {
+		if (clientVO.getFiel() != null) {
 			fields.setField("fiel", clientVO.getFiel());
 		}
 		fields.setField("cliente_nombre_completo", clientVO.toString());
 		return fields;
 	}
+
 	private AcroFields llenarFieldsJob(AcroFields fields, JobVO jobVO) throws IOException, DocumentException {
 		fields.setField("dependencia", jobVO.getDependence());
 		fields.setField("centro_trabajo", jobVO.getPlace());
@@ -313,33 +409,34 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("puesto", jobVO.getJob());
 		fields.setField("antiguedad_a", jobVO.getTime_working_y());
 		fields.setField("antiguedad_m", jobVO.getTime_working_m());
-		if(jobVO.getPhone() != null) {
+		if (jobVO.getPhone() != null) {
 			fields.setField("telefono_empleo", jobVO.getPhone());
 		}
-		if(jobVO.getExtension() != null) {
+		if (jobVO.getExtension() != null) {
 			fields.setField("extension", jobVO.getExtension());
 		}
 		fields.setField("nomina", jobVO.getPayroll());
 		fields.setField("ingreso_mensual", String.valueOf(jobVO.getIncome()));
-		if(jobVO.getType().equals("B")) {
+		if (jobVO.getType().equals("B")) {
 			fields.setField("empleo_b", "X");
 		}
-		if(jobVO.getType().equals("E")) {
+		if (jobVO.getType().equals("E")) {
 			fields.setField("empleo_e", "X");
 		}
-		if(jobVO.getType().equals("J")) {
+		if (jobVO.getType().equals("J")) {
 			fields.setField("empleo_J", "X");
 		}
-		if(jobVO.getType().equals("C")) {
+		if (jobVO.getType().equals("C")) {
 			fields.setField("empleo_C", "X");
 		}
-		
+
 		return fields;
 	}
+
 	private AcroFields llenarFieldsAdressC(AcroFields fields, AdressVO adressVO) throws IOException, DocumentException {
 		fields.setField("cliente_calle", adressVO.getStreet());
 		fields.setField("cliente_exterior", adressVO.getNumber());
-		if(adressVO.getInt_number() != null) {
+		if (adressVO.getInt_number() != null) {
 			fields.setField("cliente_interior", adressVO.getInt_number());
 		}
 		fields.setField("cliente_colonia", adressVO.getSuburb());
@@ -350,10 +447,11 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("cliente_codigo_postal", String.valueOf(adressVO.getPostal_code()));
 		return fields;
 	}
+
 	private AcroFields llenarFieldsAdressJ(AcroFields fields, AdressVO adressVO) throws IOException, DocumentException {
 		fields.setField("empleo_calle", adressVO.getStreet());
 		fields.setField("empleo_exterior", adressVO.getNumber());
-		if(adressVO.getInt_number() != null) {
+		if (adressVO.getInt_number() != null) {
 			fields.setField("cliente_interior", adressVO.getInt_number());
 		}
 		fields.setField("empleo_colonia", adressVO.getSuburb());
@@ -364,6 +462,7 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("empleo_codigo_postal", String.valueOf(adressVO.getPostal_code()));
 		return fields;
 	}
+
 	private AcroFields llenarFieldsBank(AcroFields fields, BankVO bankVO) throws IOException, DocumentException {
 		String cadena = bankVO.getClabe();
 		char[] c = cadena.toCharArray();
@@ -387,11 +486,33 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("clabe18", String.valueOf(c[17]));
 		return fields;
 	}
-	private AcroFields llenarFieldsProduct(AcroFields fields, ProductVO productVO) throws IOException, DocumentException {
-		
+
+	private AcroFields llenarFieldsProduct(AcroFields fields, ProductVO productVO)
+			throws IOException, DocumentException {
+
 		return fields;
 	}
-	
+
+	private AcroFields llenarFieldsConyuge(AcroFields fields, ReferencesVO referencesVO)
+			throws IOException, DocumentException {
+		fields.setField("conyuge_nombre", referencesVO.getName());
+		fields.setField("conyuge_nombre2", referencesVO.getName());
+		fields.setField("conyuge_apellido1", referencesVO.getName());
+		fields.setField("conyuge_apellido2", referencesVO.getName());
+		fields.setField("conyuge_nacionalidad", referencesVO.getNacionality());
+		return fields;
+	}
+
+	private AcroFields llenarFieldsReferencias(AcroFields fields, ReferencesVO referencesVO, Long numReferencia)
+			throws IOException, DocumentException {
+		fields.setField("nombre_ref_".concat(numReferencia.toString()), referencesVO.getName());
+		fields.setField("telefono_ref_".concat(numReferencia.toString()), referencesVO.getPhone());
+		fields.setField("relacion_ref_".concat(numReferencia.toString()), referencesVO.getRelationship());
+		fields.setField("tiempo_conocerse_ref_".concat(numReferencia.toString()),
+				referencesVO.getBirth().toString().concat(" años"));
+		return fields;
+	}
+
 	private Date convertirFecha(String fecha) {
 		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 		Date date = null;
