@@ -16,6 +16,7 @@ public class AdressVO {
 	private String suburb;
 	private String crosses;
 	private String state;
+	private String town;
 	private String contry;
 	private Long postal_code;
 	/**
@@ -137,6 +138,18 @@ public class AdressVO {
 	 */
 	public void setPostal_code(Long postal_code) {
 		this.postal_code = postal_code;
+	}
+	/**
+	 * @return the town
+	 */
+	public String getTown() {
+		return town;
+	}
+	/**
+	 * @param town the town to set
+	 */
+	public void setTown(String town) {
+		this.town = town;
 	}
 	
 	

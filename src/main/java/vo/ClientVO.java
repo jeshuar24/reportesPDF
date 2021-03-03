@@ -21,7 +21,10 @@ public class ClientVO {
 	private String first_last_name;
 	private String sec_last_name;
 	private String nacionality;
+	private String country;
+	private String state;
 	private Date birth;
+	private String gender;
 	private String type_housing;
 	private Long living_there_y;
 	private Long living_there_m;
@@ -31,7 +34,10 @@ public class ClientVO {
 	private String contact_schedule;
 	private String rfc;
 	private String curp;
+	private String fiel;
 	private String civil_status;
+	
+	
 	/**
 	 * @return the civil_status
 	 */
@@ -205,6 +211,54 @@ public class ClientVO {
 	 */
 	public String getEmail() {
 		return email;
+	}
+	/**
+	 * @return the country
+	 */
+	public String getCountry() {
+		return country;
+	}
+	/**
+	 * @param country the country to set
+	 */
+	public void setCountry(String country) {
+		this.country = country;
+	}
+	/**
+	 * @return the state
+	 */
+	public String getState() {
+		return state;
+	}
+	/**
+	 * @param state the state to set
+	 */
+	public void setState(String state) {
+		this.state = state;
+	}
+	/**
+	 * @return the gender
+	 */
+	public String getGender() {
+		return gender;
+	}
+	/**
+	 * @param gender the gender to set
+	 */
+	public void setGender(String gender) {
+		this.gender = gender;
+	}
+	/**
+	 * @return the fiel
+	 */
+	public String getFiel() {
+		return fiel;
+	}
+	/**
+	 * @param fiel the fiel to set
+	 */
+	public void setFiel(String fiel) {
+		this.fiel = fiel;
 	}
 	/**
 	 * @param email the email to set

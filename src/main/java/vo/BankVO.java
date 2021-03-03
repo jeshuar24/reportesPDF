@@ -12,9 +12,7 @@ public class BankVO {
 	private Long client_id;
 	private String clabe;
 	private String bank;
-	private String arrangement;
 	private String account;
-	private String payment_date;
 	/**
 	 * @return the id
 	 */
@@ -64,18 +62,6 @@ public class BankVO {
 		this.bank = bank;
 	}
 	/**
-	 * @return the arrangement
-	 */
-	public String getArrangement() {
-		return arrangement;
-	}
-	/**
-	 * @param arrangement the arrangement to set
-	 */
-	public void setArrangement(String arrangement) {
-		this.arrangement = arrangement;
-	}
-	/**
 	 * @return the account
 	 */
 	public String getAccount() {
@@ -87,17 +73,5 @@ public class BankVO {
 	public void setAccount(String account) {
 		this.account = account;
 	}
-	/**
-	 * @return the payment_date
-	 */
-	public String getPayment_date() {
-		return payment_date;
-	}
-	/**
-	 * @param payment_date the payment_date to set
-	 */
-	public void setPayment_date(String payment_date) {
-		this.payment_date = payment_date;
-	}
-
+	
 }

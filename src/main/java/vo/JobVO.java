@@ -11,12 +11,15 @@ public class JobVO {
 	private Long id;
 	private Long client_id;
 	private String place;
+	private String dependence;
 	private String occupation;
 	private String job;
-	private String time_working;
+	private String time_working_y;
+	private String time_working_m;
 	private String phone;
 	private String extension;
 	private String payroll;
+	private String type;
 	private Double income;
 	/**
 	 * @return the id
@@ -79,18 +82,6 @@ public class JobVO {
 		this.job = job;
 	}
 	/**
-	 * @return the time_working
-	 */
-	public String getTime_working() {
-		return time_working;
-	}
-	/**
-	 * @param time_working the time_working to set
-	 */
-	public void setTime_working(String time_working) {
-		this.time_working = time_working;
-	}
-	/**
 	 * @return the phone
 	 */
 	public String getPhone() {
@@ -135,8 +126,59 @@ public class JobVO {
 	/**
 	 * @param income the income to set
 	 */
+	/**
+	 * @return the time_working_y
+	 */
+	public String getTime_working_y() {
+		return time_working_y;
+	}
+	/**
+	 * @param time_working_y the time_working_y to set
+	 */
+	public void setTime_working_y(String time_working_y) {
+		this.time_working_y = time_working_y;
+	}
+	/**
+	 * @return the time_working_m
+	 */
+	public String getTime_working_m() {
+		return time_working_m;
+	}
+	/**
+	 * @param time_working_m the time_working_m to set
+	 */
+	public void setTime_working_m(String time_working_m) {
+		this.time_working_m = time_working_m;
+	}
+	/**
+	 * @return the type
+	 */
+	public String getType() {
+		return type;
+	}
+	/**
+	 * @param type the type to set
+	 */
+	public void setType(String type) {
+		this.type = type;
+	}
+	/**
+	 * @param income the income to set
+	 */
 	public void setIncome(Double income) {
 		this.income = income;
+	}
+	/**
+	 * @return the dependence
+	 */
+	public String getDependence() {
+		return dependence;
+	}
+	/**
+	 * @param dependence the dependence to set
+	 */
+	public void setDependence(String dependence) {
+		this.dependence = dependence;
 	}
 	
 

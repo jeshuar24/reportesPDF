@@ -18,11 +18,14 @@ public class CreditVO {
 	private String branch_office;
 	private Double amount;
 	private String disposing;
+	private String city;
 	private String debt;
 	private Date date;
 	private String destination;
 	private String periodicity;
-	private Long status;
+	private String question;
+	private boolean status;
+	
 	/**
 	 * @return the id
 	 */
@@ -170,13 +173,38 @@ public class CreditVO {
 	/**
 	 * @return the status
 	 */
-	public Long getStatus() {
+	public boolean isStatus() {
 		return status;
 	}
 	/**
 	 * @param status the status to set
 	 */
-	public void setStatus(Long status) {
+	public void setStatus(boolean status) {
 		this.status = status;
 	}
+	/**
+	 * @return the city
+	 */
+	public String getCity() {
+		return city;
+	}
+	/**
+	 * @param city the city to set
+	 */
+	public void setCity(String city) {
+		this.city = city;
+	}
+	/**
+	 * @return the question
+	 */
+	public String getQuestion() {
+		return question;
+	}
+	/**
+	 * @param question the question to set
+	 */
+	public void setQuestion(String question) {
+		this.question = question;
+	}
+	
 }

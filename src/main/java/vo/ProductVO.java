@@ -8,23 +8,12 @@ package vo;
  *
  */
 public class ProductVO {
-	private Long id;
 	private String promotion;
+	private String term;
 	private String cat;
 	private String tasa;
 	private String factor;
-	/**
-	 * @return the id
-	 */
-	public Long getId() {
-		return id;
-	}
-	/**
-	 * @param id the id to set
-	 */
-	public void setId(Long id) {
-		this.id = id;
-	}
+	
 	/**
 	 * @return the promotion
 	 */
@@ -72,6 +61,18 @@ public class ProductVO {
 	 */
 	public void setFactor(String factor) {
 		this.factor = factor;
+	}
+	/**
+	 * @return the term
+	 */
+	public String getTerm() {
+		return term;
+	}
+	/**
+	 * @param term the term to set
+	 */
+	public void setTerm(String term) {
+		this.term = term;
 	}
 	
 
