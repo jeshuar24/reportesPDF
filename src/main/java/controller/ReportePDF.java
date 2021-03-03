@@ -89,7 +89,7 @@ public class ReportePDF extends HttpServlet {
 
 				ArrayList<Object> etiquetasList = null;
 				for (Map.Entry<String, Object> entry : nodosJSON.entrySet()) {
-					if (!entry.getKey().equals("product") && !entry.getKey().equals("references")) {
+					if (!entry.getKey().equals("references")) {
 						valorEtiquetas.put(entry.getKey(), (HashMap<String, String>) entry.getValue());
 					} else {
 						etiquetasList = (ArrayList) entry.getValue();
