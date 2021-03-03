@@ -29,7 +29,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.logging.Logger;
 import vo.AdressVO;
+import vo.BankVO;
 import vo.ClientVO;
+import vo.JobVO;
+import vo.ProductVO;
 
 /**
  * Servlet implementation class ReportePDF
@@ -47,8 +50,11 @@ public class ReportePDF extends HttpServlet {
 		String resultJSON = null;
 		HashMap<String, HashMap<String, String>> valorEtiquetas = null;
 		ClientVO cliente = null;
+		JobVO job = null;
 		AdressVO direccionTrabajo = null;
 		AdressVO direccionCasa = null;
+		BankVO banco = null;
+		ProductVO producto = null;
 		try {
 			// Obtiene el parametro cliente del request (sistema principal)
 			String idCliente = request.getParameter("cliente");
@@ -103,14 +109,17 @@ public class ReportePDF extends HttpServlet {
 		try {
 				// Llena el objeto client
 				cliente = llenaClientVO(valorEtiquetas, "client");
-				// Llena el objeto adressC
-				direccionTrabajo = llenaAdressVO(valorEtiquetas, "addresC");
-				direccionCasa = llenaAdressVO(valorEtiquetas, "addresJ");
+				// Llena el objeto adressC adressJ
+				direccionCasa = llenaAdressVO(valorEtiquetas, "adressC");
+				direccionTrabajo = llenaAdressVO(valorEtiquetas, "adressJ");
 				// Llena el objeto job
+				job = llenaJobVO(valorEtiquetas, "job");
 				// Llena el objeto references
 				// Llena el objeto credit
 				// Llena el objeto product
+				producto = llenaProductVO(valorEtiquetas, "product");
 				// Llena el objeto bank
+				banco = llenaBankVO(valorEtiquetas, "bank");
 
 		} catch (Exception e) {
 			LOGGER.info("Error al llenar los objetos del json a java" + e);
@@ -123,7 +132,11 @@ public class ReportePDF extends HttpServlet {
 			PdfStamper stamper = new PdfStamper(reader, baos);
 			AcroFields fields = stamper.getAcroFields();
 			fields = llenarFieldsCliente(fields, cliente);
-
+			fields = llenarFieldsAdressC(fields, direccionCasa);
+			fields = llenarFieldsJob(fields, job);
+			fields = llenarFieldsAdressJ(fields, direccionTrabajo);
+			fields = llenarFieldsBank(fields, banco);
+			//fields = llenarFieldsProduct(fields, producto);
 			stamper.setFormFlattening(false);
 			stamper.close();
 			try {
@@ -153,6 +166,8 @@ public class ReportePDF extends HttpServlet {
 			throws ServletException, IOException {
 
 	}
+	
+	/////////////////////////////////////////////////////////////////////////////////////LLENAR LOS VALORES DEL JSON
 	/**
 	 * Método para llenar el VO de acuerdo al nombre del objeto del cliente
 	 * @param valorEtiquetas
@@ -162,13 +177,14 @@ public class ReportePDF extends HttpServlet {
 	private ClientVO llenaClientVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
 		HashMap<String, String> valores = valorEtiquetas.get(identificador);
 		ClientVO clientVO = new ClientVO();
+		// clientVO.setId(Long.parseLong(valores.get("id")));
+		// clientVO.setUser_id(Long.parseLong(valores.get("user_id")));
 		clientVO.setBirth(convertirFecha(valores.get("birth")));
 		clientVO.setCellphone(valores.get("cellphone"));
 		clientVO.setContact_schedule(valores.get("contact_schedule"));
 		clientVO.setCurp(valores.get("curp"));
 		clientVO.setEmail(valores.get("email"));
 		clientVO.setFirst_last_name(valores.get("first_last_name"));
-		// clientVO.setId(Long.parseLong(valores.get("id")));
 		clientVO.setLiving_there_m(Long.parseLong(valores.get("living_there_m")));
 		clientVO.setLiving_there_y(Long.parseLong(valores.get("living_there_y")));
 		clientVO.setNacionality(valores.get("nacionality"));
@@ -178,9 +194,34 @@ public class ReportePDF extends HttpServlet {
 		clientVO.setRfc(valores.get("rfc"));
 		clientVO.setSec_last_name(valores.get("sec_last_name"));
 		clientVO.setType_housing(valores.get("type_housing"));
-		// clientVO.setUser_id(Long.parseLong(valores.get("user_id")));
 		clientVO.setCivil_status(valores.get("civil_status"));
+		clientVO.setGender(valores.get("gender"));
+		clientVO.setCountry(valores.get("country"));
+		clientVO.setState(valores.get("state"));
+		clientVO.setFiel(valores.get("fiel"));
 		return clientVO;
+	}
+	/**
+	 * Método para llenar el VO de acuerdo al nombre del objeto del job
+	 * @param valorEtiquetas
+	 * @param identificador
+	 * @return JobVO
+	 */
+	private JobVO llenaJobVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
+		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+		JobVO jobVO = new JobVO();
+		jobVO.setDependence(valores.get("dependence"));
+		jobVO.setPlace(valores.get("place"));
+		jobVO.setOccupation(valores.get("occupation"));
+		jobVO.setJob(valores.get("job"));
+        jobVO.setTime_working_y(valores.get("time_working_y"));
+        jobVO.setTime_working_m(valores.get("time_working_m"));
+        jobVO.setType(valores.get("type"));
+        jobVO.setPhone(valores.get("phone"));
+        jobVO.setExtension(valores.get("extension"));
+        jobVO.setPayroll(valores.get("payroll"));
+        jobVO.setIncome(Double.parseDouble(valores.get("income")));
+		return jobVO;
 	}
 	
 	/**
@@ -192,18 +233,43 @@ public class ReportePDF extends HttpServlet {
 	private AdressVO llenaAdressVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
 		HashMap<String, String> valores = valorEtiquetas.get(identificador);
 		AdressVO adressVO = new AdressVO();
+		adressVO.setStreet(valores.get("street"));
+		adressVO.setNumber(valores.get("number"));
+		adressVO.setInt_number(valores.get("int_number"));
+		adressVO.setSuburb(valores.get("suburb"));
+		adressVO.setCrosses(valores.get("crosses"));
+		adressVO.setState(valores.get("state"));
+		adressVO.setTown(valores.get("town"));
+		adressVO.setContry(valores.get("contry"));
+		adressVO.setPostal_code(Long.parseLong(valores.get("postal_code")));
 		return adressVO;
 	}
-	private Date convertirFecha(String fecha) {
-		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
-		Date date = null;
-		try {
-			date = format.parse(fecha);
-		} catch (Exception e) {
-			LOGGER.info("Error al convertir fechas " + e);
-		}
-		return date;
+	/**
+	 * Método para llenar el VO de acuerdo al nombre del objeto del job
+	 * @param valorEtiquetas
+	 * @param identificador
+	 * @return BankVO
+	 */
+	private BankVO llenaBankVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
+		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+		BankVO bankVO = new BankVO();
+		bankVO.setAccount(valores.get("account"));
+		bankVO.setBank(valores.get("bank"));
+		bankVO.setClabe(valores.get("clabe"));
+		return bankVO;
 	}
+	private ProductVO llenaProductVO(HashMap<String, HashMap<String, String>> valorEtiquetas, String identificador) {
+		HashMap<String, String> valores = valorEtiquetas.get(identificador);
+		ProductVO productVO = new ProductVO();
+		productVO.setPromotion(valores.get("promotion"));
+		productVO.setTerm(valores.get("term"));
+		productVO.setTasa(valores.get("tasa"));
+		productVO.setFactor(valores.get("factor"));
+		
+		return productVO;
+	}
+	
+	/////////////////////////////////////////////////////////////////////// LLENAR LOS FIELDS DEL REPORTE
 	private AcroFields llenarFieldsCliente(AcroFields fields, ClientVO clientVO) throws IOException, DocumentException {
 
 		fields.setField("nombre", clientVO.getName());
@@ -218,6 +284,9 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("apellido2", clientVO.getSec_last_name());
 		fields.setField("estado_civil", clientVO.getCivil_status());
 		fields.setField("nacionalidad", clientVO.getNacionality());
+		fields.setField("pais", clientVO.getCountry());
+		fields.setField("estado", clientVO.getState());
+		fields.setField("genero", clientVO.getFiel());
 		fields.setField("tipo_vivienda", clientVO.getType_housing());
 		if(clientVO.getLiving_there_y() != null) {
 			fields.setField("cliente_arraigo_a", String.valueOf(clientVO.getLiving_there_y()));
@@ -225,14 +294,112 @@ public class ReportePDF extends HttpServlet {
 		if(clientVO.getLiving_there_m() != null) {
 			fields.setField("cliente_arraigo_m", String.valueOf(clientVO.getLiving_there_m()));
 		}
-		// pendiente living_there
 		fields.setField("celular", clientVO.getCellphone());
 		fields.setField("telefono_casa", clientVO.getPhone());
 		fields.setField("correo_electronico", clientVO.getEmail());
 		fields.setField("horario_contacto", clientVO.getContact_schedule());
 		fields.setField("rfc", clientVO.getRfc());
 		fields.setField("curp", clientVO.getCurp());
+		if(clientVO.getFiel() != null) {
+			fields.setField("fiel", clientVO.getFiel());
+		}
 		fields.setField("cliente_nombre_completo", clientVO.toString());
 		return fields;
+	}
+	private AcroFields llenarFieldsJob(AcroFields fields, JobVO jobVO) throws IOException, DocumentException {
+		fields.setField("dependencia", jobVO.getDependence());
+		fields.setField("centro_trabajo", jobVO.getPlace());
+		fields.setField("ocupacion", jobVO.getOccupation());
+		fields.setField("puesto", jobVO.getJob());
+		fields.setField("antiguedad_a", jobVO.getTime_working_y());
+		fields.setField("antiguedad_m", jobVO.getTime_working_m());
+		if(jobVO.getPhone() != null) {
+			fields.setField("telefono_empleo", jobVO.getPhone());
+		}
+		if(jobVO.getExtension() != null) {
+			fields.setField("extension", jobVO.getExtension());
+		}
+		fields.setField("nomina", jobVO.getPayroll());
+		fields.setField("ingreso_mensual", String.valueOf(jobVO.getIncome()));
+		if(jobVO.getType().equals("B")) {
+			fields.setField("empleo_b", "X");
+		}
+		if(jobVO.getType().equals("E")) {
+			fields.setField("empleo_e", "X");
+		}
+		if(jobVO.getType().equals("J")) {
+			fields.setField("empleo_J", "X");
+		}
+		if(jobVO.getType().equals("C")) {
+			fields.setField("empleo_C", "X");
+		}
+		
+		return fields;
+	}
+	private AcroFields llenarFieldsAdressC(AcroFields fields, AdressVO adressVO) throws IOException, DocumentException {
+		fields.setField("cliente_calle", adressVO.getStreet());
+		fields.setField("cliente_exterior", adressVO.getNumber());
+		if(adressVO.getInt_number() != null) {
+			fields.setField("cliente_interior", adressVO.getInt_number());
+		}
+		fields.setField("cliente_colonia", adressVO.getSuburb());
+		fields.setField("cliente_cruzamientos", adressVO.getCrosses());
+		fields.setField("cliente_estado", adressVO.getState());
+		fields.setField("cliente_municipio", adressVO.getTown());
+		fields.setField("cliente_pais", adressVO.getContry());
+		fields.setField("cliente_codigo_postal", String.valueOf(adressVO.getPostal_code()));
+		return fields;
+	}
+	private AcroFields llenarFieldsAdressJ(AcroFields fields, AdressVO adressVO) throws IOException, DocumentException {
+		fields.setField("empleo_calle", adressVO.getStreet());
+		fields.setField("empleo_exterior", adressVO.getNumber());
+		if(adressVO.getInt_number() != null) {
+			fields.setField("cliente_interior", adressVO.getInt_number());
+		}
+		fields.setField("empleo_colonia", adressVO.getSuburb());
+		fields.setField("empleo_cruzamientos", adressVO.getCrosses());
+		fields.setField("empleo_estado", adressVO.getState());
+		fields.setField("empleo_ciudad", adressVO.getTown());
+		fields.setField("empleo_pais", adressVO.getContry());
+		fields.setField("empleo_codigo_postal", String.valueOf(adressVO.getPostal_code()));
+		return fields;
+	}
+	private AcroFields llenarFieldsBank(AcroFields fields, BankVO bankVO) throws IOException, DocumentException {
+		String cadena = bankVO.getClabe();
+		char[] c = cadena.toCharArray();
+		fields.setField("clabe1", String.valueOf(c[0]));
+		fields.setField("clabe2", String.valueOf(c[1]));
+		fields.setField("clabe3", String.valueOf(c[2]));
+		fields.setField("clabe4", String.valueOf(c[3]));
+		fields.setField("clabe5", String.valueOf(c[4]));
+		fields.setField("clabe6", String.valueOf(c[5]));
+		fields.setField("clabe7", String.valueOf(c[6]));
+		fields.setField("clabe8", String.valueOf(c[7]));
+		fields.setField("clabe9", String.valueOf(c[8]));
+		fields.setField("clabe10", String.valueOf(c[9]));
+		fields.setField("clabe11", String.valueOf(c[10]));
+		fields.setField("clabe12", String.valueOf(c[11]));
+		fields.setField("clabe13", String.valueOf(c[12]));
+		fields.setField("clabe14", String.valueOf(c[13]));
+		fields.setField("clabe15", String.valueOf(c[14]));
+		fields.setField("clabe16", String.valueOf(c[15]));
+		fields.setField("clabe17", String.valueOf(c[16]));
+		fields.setField("clabe18", String.valueOf(c[17]));
+		return fields;
+	}
+	private AcroFields llenarFieldsProduct(AcroFields fields, ProductVO productVO) throws IOException, DocumentException {
+		
+		return fields;
+	}
+	
+	private Date convertirFecha(String fecha) {
+		DateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = null;
+		try {
+			date = format.parse(fecha);
+		} catch (Exception e) {
+			LOGGER.info("Error al convertir fechas " + e);
+		}
+		return date;
 	}
 }
