@@ -31,6 +31,7 @@ import java.util.logging.Logger;
 import vo.AdressVO;
 import vo.BankVO;
 import vo.ClientVO;
+import vo.CreditVO;
 import vo.JobVO;
 import vo.ProductVO;
 import vo.ReferencesVO;
@@ -56,6 +57,7 @@ public class ReportePDF extends HttpServlet {
 		AdressVO direccionCasa = null;
 		BankVO banco = null;
 		ProductVO producto = null;
+		CreditVO credito = null;
 		// Lista para saber el nombre de referencias, guardara reference0, reference1,
 		// .. reference(n)
 		ArrayList<String> referenciasNombre = new ArrayList<String>();
@@ -150,7 +152,12 @@ public class ReportePDF extends HttpServlet {
 		} catch (Exception e) {
 			LOGGER.info("Error al llenar la informacion de referencias" + e);
 		}
-		// Llena el objeto credit
+		try {
+			// Llena el objeto credit
+			credito = llenaCreditVO(valorEtiquetas, "credit");
+		} catch (Exception e) {
+			LOGGER.info("Error al llenar la informacion de credito" + e);
+		}
 		try {
 			// Llena el objeto product
 			producto = llenaProductVO(valorEtiquetas, "product");
@@ -186,8 +193,7 @@ public class ReportePDF extends HttpServlet {
 				fields = llenarFieldsBank(fields, banco);
 			}
 			if (referenciasValor.size() > 0) {
-				// fields = llenarFieldsProduct(fields, producto);
-				// M´etodo para llenar conyuge y referencias activas
+				// Metodo para llenar conyuge y referencias activas
 				Long numReferencia = 1L;
 				for (ReferencesVO referencias : referenciasValor) {
 					if (referencias.isStatus()) {
@@ -202,6 +208,12 @@ public class ReportePDF extends HttpServlet {
 					}
 				}
 			}
+			if (credito != null) {
+				fields = llenarFieldsCredit(fields, credito);
+			}
+			/*if (producto != null) {
+				fields = llenarFieldsProduct(fields, producto);
+			}*/
 			stamper.setFormFlattening(false);
 			stamper.close();
 			try {
@@ -332,6 +344,24 @@ public class ReportePDF extends HttpServlet {
 		bankVO.setBank(String.valueOf(valores.get("bank")));
 		bankVO.setClabe(String.valueOf(valores.get("clabe")));
 		return bankVO;
+	}
+	
+	private CreditVO llenaCreditVO(HashMap<String, HashMap<String, Object>> valorEtiquetas, String identificador) {
+		HashMap<String, Object> valores = valorEtiquetas.get(identificador);
+		CreditVO creditVO = new CreditVO();
+		creditVO.setAmount(Double.parseDouble((String) valores.get("amount")));
+		creditVO.setBranch_office(String.valueOf(valores.get("branch_office")));
+		creditVO.setCity(String.valueOf(valores.get("city")));
+		creditVO.setDate(convertirFecha(String.valueOf(valores.get("date"))));
+		creditVO.setDebt(String.valueOf(valores.get("debt")));
+		creditVO.setDestination(String.valueOf(valores.get("destination")));
+		creditVO.setDisposing(String.valueOf(valores.get("disposing")));
+		creditVO.setPeriodicity(String.valueOf(valores.get("periodicity")));
+		creditVO.setPromotor_code(String.valueOf(valores.get("promotor_code")));
+		creditVO.setPromotor_name(String.valueOf(valores.get("promotor_name")));
+		creditVO.setQuestion(String.valueOf(valores.get("question")));
+		creditVO.setStatus((String.valueOf(valores.get("status")).equals("1")) ? true : false);
+		return creditVO;
 	}
 
 	private ProductVO llenaProductVO(HashMap<String, HashMap<String, Object>> valorEtiquetas, String identificador) {
@@ -469,30 +499,51 @@ public class ReportePDF extends HttpServlet {
 	private AcroFields llenarFieldsBank(AcroFields fields, BankVO bankVO) throws IOException, DocumentException {
 		String cadena = bankVO.getClabe();
 		char[] c = cadena.toCharArray();
-		fields.setField("clabe1", String.valueOf(c[0]));
-		fields.setField("clabe2", String.valueOf(c[1]));
-		fields.setField("clabe3", String.valueOf(c[2]));
-		fields.setField("clabe4", String.valueOf(c[3]));
-		fields.setField("clabe5", String.valueOf(c[4]));
-		fields.setField("clabe6", String.valueOf(c[5]));
-		fields.setField("clabe7", String.valueOf(c[6]));
-		fields.setField("clabe8", String.valueOf(c[7]));
-		fields.setField("clabe9", String.valueOf(c[8]));
-		fields.setField("clabe10", String.valueOf(c[9]));
-		fields.setField("clabe11", String.valueOf(c[10]));
-		fields.setField("clabe12", String.valueOf(c[11]));
-		fields.setField("clabe13", String.valueOf(c[12]));
-		fields.setField("clabe14", String.valueOf(c[13]));
-		fields.setField("clabe15", String.valueOf(c[14]));
-		fields.setField("clabe16", String.valueOf(c[15]));
-		fields.setField("clabe17", String.valueOf(c[16]));
-		fields.setField("clabe18", String.valueOf(c[17]));
+		for(int i = 0; i < c.length; i++ ) {
+			fields.setField("clabe" + (i+1), String.valueOf(c[i]));
+		}
+		
 		return fields;
 	}
 
 	private AcroFields llenarFieldsProduct(AcroFields fields, ProductVO productVO)
 			throws IOException, DocumentException {
 
+		return fields;
+	}
+	
+	private AcroFields llenarFieldsCredit(AcroFields fields, CreditVO creditVO)
+			throws IOException, DocumentException {
+		String cadenaSucursal = creditVO.getBranch_office();
+		String cadenaCP = creditVO.getPromotor_code();
+		char[] c = cadenaSucursal.toCharArray();
+		char[] co = cadenaCP.toCharArray();
+		
+		fields.setField("nombre_promotor", creditVO.getPromotor_name());
+		for(int i = 0; i < c.length; i++ ) {
+			fields.setField("sucursal" + (i+1), String.valueOf(c[i]));
+		}
+		for(int i = 0; i < co.length; i++ ) {
+			fields.setField("codigo_promotor" + (i+1), String.valueOf(co[i]));
+		}
+		fields.setField("pregunta_atn", creditVO.getQuestion());
+		fields.setField("monto_maximo",String.valueOf( creditVO.getAmount()));
+		fields.setField("monto",String.valueOf( creditVO.getAmount()));
+		if(creditVO.getDisposing().equals("Orden de pago")) {
+			fields.setField("disposicion_o", "X");
+		}
+		if(creditVO.getDisposing().equals("Transferencia")) {
+			fields.setField("disposicion_t", "X");
+		}
+		if(creditVO.getDisposing().equals("Cheque")) {
+			fields.setField("disposicion_c", "X");
+		}
+		fields.setField("destino", creditVO.getDestination());
+		fields.setField("destino_descripcion", creditVO.getDebt());
+		fields.setField("periodicidad", creditVO.getPeriodicity());
+		//fields.setField("", creditVO.getCity());
+		//fields.setField("", creditVO.getDate());
+		
 		return fields;
 	}
 
