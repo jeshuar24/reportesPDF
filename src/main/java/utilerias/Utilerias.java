@@ -71,7 +71,7 @@ public class Utilerias {
 		}catch(Exception e) {
 			LOGGER.info("Error al obtener el nombre del mes "+e );
 		}
-		return nombreMes;
+		return nombreMes.toUpperCase();
 	}
 
 }

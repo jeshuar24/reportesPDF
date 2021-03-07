@@ -80,7 +80,7 @@ public class ReportePDF extends HttpServlet {
 			// Valida que al obtener el parametro traiga un valor diferente de "" o null
 			if (!idCliente.equals("") || idCliente != null) {
 				// Arma la url para realizar la petición concatenando el id recibido
-				URL url = new URL("http://192.168.100.50:3333/getClientJSON/".concat(idCliente));
+				URL url = new URL("http://127.0.0.1:3333/getClientJSON/".concat(idCliente));
 				// Realiza la peticion concatenando el id que recibe del request para obtener
 				// los datos del cliente
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -639,6 +639,7 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("dia_fecha_siguiente", String.valueOf(fecha30.get(Calendar.DAY_OF_MONTH)));
 		fields.setField("mes_fecha_siguiente", nombreMes30);
 		fields.setField("anio_fecha_siguiente", String.valueOf(fecha30.get(Calendar.YEAR)));
+		fields.setField("fecha_completa", credito.getCity()+" A "+String.valueOf(fechaCredito.get(Calendar.DAY_OF_MONTH))+" DE "+nombreMes+" DE "+String.valueOf(fechaCredito.get(Calendar.YEAR)));
 		return fields;
 	}
 	
