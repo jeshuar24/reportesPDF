@@ -164,5 +164,9 @@ public class ReferencesVO {
 	public void setStatus(boolean status) {
 		this.status = status;
 	}
+	@Override
+	public String toString() {
+		return name + " "+name2+" "+first_last_name+" "+sec_last_name;
+	}
 	
 }

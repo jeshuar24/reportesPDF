@@ -5,8 +5,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
@@ -29,6 +27,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import utilerias.Utilerias;
+
 import java.util.logging.Logger;
 import vo.AdressVO;
 import vo.BankVO;
@@ -44,11 +44,13 @@ import vo.ReferencesVO;
 public class ReportePDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final static Logger LOGGER = Logger.getLogger(ReportePDF.class.getName());
+	private static Utilerias utilerias = new Utilerias();
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
 	 *      response)
 	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
 		String resultJSON = null;
@@ -74,7 +76,7 @@ public class ReportePDF extends HttpServlet {
 			// Valida que al obtener el parametro traiga un valor diferente de "" o null
 			if (!idCliente.equals("") || idCliente != null) {
 				// Arma la url para realizar la petición concatenando el id recibido
-				URL url = new URL("http://192.168.100.50:3333/getClientJSON/".concat(idCliente));
+				URL url = new URL("http://127.0.0.1:3333/getClientJSON/".concat(idCliente));
 				// Realiza la peticion concatenando el id que recibe del request para obtener
 				// los datos del cliente
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -216,6 +218,7 @@ public class ReportePDF extends HttpServlet {
 			if (producto != null) {
 				fields = llenarFieldsProduct(fields, producto, credito);
 			}
+			fields = llenarFechas(fields, credito);
 			stamper.setFormFlattening(false);
 			stamper.close();
 			try {
@@ -613,4 +616,21 @@ public class ReportePDF extends HttpServlet {
 	    long tmp = Math.round(value);
 	    return (double) tmp / factor;
 	}
+	private AcroFields llenarFechas(AcroFields fields, CreditVO credito)
+			throws IOException, DocumentException {
+		Calendar fechaCredito = utilerias.fechaActual(credito.getDate());
+		Calendar fecha30 = utilerias.sumaDiasFecha(fechaCredito, 30);
+		String nombreMes30 = utilerias.nombreMeses(fecha30);
+		String nombreMes = utilerias.nombreMeses(fechaCredito);
+		//Fecha Actual
+		fields.setField("dia_fecha", String.valueOf(fechaCredito.get(Calendar.DAY_OF_MONTH)));
+		fields.setField("mes_fecha", nombreMes);
+		fields.setField("anio_fecha", String.valueOf(fechaCredito.get(Calendar.YEAR)));
+		//Fecha 30 dias despues
+		fields.setField("dia_fecha_siguiente", String.valueOf(fecha30.get(Calendar.DAY_OF_MONTH)));
+		fields.setField("mes_fecha_siguiente", nombreMes30);
+		fields.setField("anio_fecha_siguiente", String.valueOf(fecha30.get(Calendar.YEAR)));
+		return fields;
+	}
+	
 }
