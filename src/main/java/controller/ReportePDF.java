@@ -17,6 +17,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.apache.commons.io.IOUtils;
 import org.json.JSONObject;
+import java.text.DecimalFormat;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.AcroFields;
@@ -47,6 +48,7 @@ public class ReportePDF extends HttpServlet {
 	private final static Logger LOGGER = Logger.getLogger(ReportePDF.class.getName());
 	private static Utilerias utilerias = new Utilerias();
 	private static NumeroLetras numeroLetras = new NumeroLetras();
+	private static DecimalFormat df2 = new DecimalFormat("#.00");
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
@@ -78,7 +80,7 @@ public class ReportePDF extends HttpServlet {
 			// Valida que al obtener el parametro traiga un valor diferente de "" o null
 			if (!idCliente.equals("") || idCliente != null) {
 				// Arma la url para realizar la petición concatenando el id recibido
-				URL url = new URL("http://127.0.0.1:3333/getClientJSON/".concat(idCliente));
+				URL url = new URL("http://192.168.100.50:3333/getClientJSON/".concat(idCliente));
 				// Realiza la peticion concatenando el id que recibe del request para obtener
 				// los datos del cliente
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -518,34 +520,32 @@ public class ReportePDF extends HttpServlet {
 	private AcroFields llenarFieldsProduct(AcroFields fields, ProductVO productVO, CreditVO creditVO)
 			throws IOException, DocumentException {
 		String str = productVO.getCat();
+		String montoTS, parcialidadesS = "";
 		String[] arrOfStr = str.split("\\."); 
 		Double montoT, parcialides, iva, capital, interes, div = (double) 0;
 		fields.setField("plazo", productVO.getTerm());
 		fields.setField("cat", arrOfStr[0]);
 		fields.setField("cat_decimal", arrOfStr[1]);
+		fields.setField("producto", productVO.getPromotion());
 		capital = creditVO.getAmount();
 		interes = ((Double.parseDouble(productVO.getFactor())/100)/2)*(capital)*(Double.parseDouble(productVO.getTerm()));
 		iva = interes * 0.16;
 		montoT = capital + interes + iva;
 		montoT = round(montoT, 2);
-		/*BigDecimal monto = new BigDecimal(montoT);
-		monto.setScale(2, RoundingMode.HALF_UP);*/
-		fields.setField("monto_total", String.valueOf(montoT));
+		montoTS = df2.format(montoT);
+		fields.setField("monto_total", montoTS);
 		div = capital/Double.parseDouble(productVO.getTerm());
 		interes = capital*((Double.parseDouble(productVO.getFactor())/100)/2);
 		iva = interes * 0.16;
 		parcialides =  div + interes + iva;
 		parcialides = round(parcialides, 2);
-		fields.setField("parcialidades", String.valueOf(parcialides));
-		arrOfStr = String.valueOf(montoT).split("\\."); 
+		parcialidadesS = df2.format(parcialides);
+		fields.setField("parcialidades", parcialidadesS);
+		arrOfStr = montoTS.split("\\."); 
 		fields.setField("monto_letra",numeroLetras.cantidadConLetra(arrOfStr[0])+" PESOS "+arrOfStr[1]+"/100");
-		arrOfStr = String.valueOf(parcialides).split("\\."); 
+		arrOfStr = parcialidadesS.split("\\."); 
 		fields.setField("parcialidades_letra",numeroLetras.cantidadConLetra(arrOfStr[0])+" PESOS "+arrOfStr[1]+"/100");
 		fields.setField("plazo_letra",numeroLetras.cantidadConLetra(productVO.getTerm()));
-		
-		//
-		
-		//
 
 		return fields;
 	}
@@ -565,8 +565,8 @@ public class ReportePDF extends HttpServlet {
 			fields.setField("codigo_promotor" + (i+1), String.valueOf(co[i]));
 		}
 		fields.setField("pregunta_atn", creditVO.getQuestion());
-		fields.setField("monto_maximo",String.valueOf( creditVO.getAmount()));
-		fields.setField("monto",String.valueOf( creditVO.getAmount()));
+		fields.setField("monto_maximo", df2.format(creditVO.getAmount()));
+		fields.setField("monto", df2.format(creditVO.getAmount()));
 		if(creditVO.getDisposing().equals("Orden de pago")) {
 			fields.setField("disposicion_o", "X");
 		}
@@ -617,6 +617,7 @@ public class ReportePDF extends HttpServlet {
 	}
 	
 	private double round(double value, int places) {
+		
 	    if (places < 0) throw new IllegalArgumentException();
 
 	    long factor = (long) Math.pow(10, places);
