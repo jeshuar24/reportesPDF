@@ -27,6 +27,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import utilerias.NumeroLetras;
 import utilerias.Utilerias;
 
 import java.util.logging.Logger;
@@ -45,6 +46,7 @@ public class ReportePDF extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final static Logger LOGGER = Logger.getLogger(ReportePDF.class.getName());
 	private static Utilerias utilerias = new Utilerias();
+	private static NumeroLetras numeroLetras = new NumeroLetras();
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
@@ -219,6 +221,7 @@ public class ReportePDF extends HttpServlet {
 				fields = llenarFieldsProduct(fields, producto, credito);
 			}
 			fields = llenarFechas(fields, credito);
+			
 			stamper.setFormFlattening(false);
 			stamper.close();
 			try {
@@ -534,6 +537,11 @@ public class ReportePDF extends HttpServlet {
 		parcialides =  div + interes + iva;
 		parcialides = round(parcialides, 2);
 		fields.setField("parcialidades", String.valueOf(parcialides));
+		arrOfStr = String.valueOf(montoT).split("\\."); 
+		fields.setField("monto_letra",numeroLetras.cantidadConLetra(arrOfStr[0])+" PESOS "+arrOfStr[1]+"/100");
+		arrOfStr = String.valueOf(parcialides).split("\\."); 
+		fields.setField("parcialidades_letra",numeroLetras.cantidadConLetra(arrOfStr[0])+" PESOS "+arrOfStr[1]+"/100");
+		fields.setField("plazo_letra",numeroLetras.cantidadConLetra(productVO.getTerm()));
 		
 		//
 		
