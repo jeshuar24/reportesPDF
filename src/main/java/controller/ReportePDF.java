@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.text.DateFormat;
@@ -211,9 +213,9 @@ public class ReportePDF extends HttpServlet {
 			if (credito != null) {
 				fields = llenarFieldsCredit(fields, credito);
 			}
-			/*if (producto != null) {
-				fields = llenarFieldsProduct(fields, producto);
-			}*/
+			if (producto != null) {
+				fields = llenarFieldsProduct(fields, producto, credito);
+			}
 			stamper.setFormFlattening(false);
 			stamper.close();
 			try {
@@ -371,6 +373,7 @@ public class ReportePDF extends HttpServlet {
 		productVO.setTerm(String.valueOf(valores.get("term")));
 		productVO.setTasa(String.valueOf(valores.get("tasa")));
 		productVO.setFactor(String.valueOf(valores.get("factor")));
+		productVO.setCat(String.valueOf(valores.get("cat")));
 
 		return productVO;
 	}
@@ -506,8 +509,32 @@ public class ReportePDF extends HttpServlet {
 		return fields;
 	}
 
-	private AcroFields llenarFieldsProduct(AcroFields fields, ProductVO productVO)
+	private AcroFields llenarFieldsProduct(AcroFields fields, ProductVO productVO, CreditVO creditVO)
 			throws IOException, DocumentException {
+		String str = productVO.getCat();
+		String[] arrOfStr = str.split("\\."); 
+		Double montoT, parcialides, iva, capital, interes, div = (double) 0;
+		fields.setField("plazo", productVO.getTerm());
+		fields.setField("cat", arrOfStr[0]);
+		fields.setField("cat_decimal", arrOfStr[1]);
+		capital = creditVO.getAmount();
+		interes = ((Double.parseDouble(productVO.getFactor())/100)/2)*(capital)*(Double.parseDouble(productVO.getTerm()));
+		iva = interes * 0.16;
+		montoT = capital + interes + iva;
+		montoT = round(montoT, 2);
+		/*BigDecimal monto = new BigDecimal(montoT);
+		monto.setScale(2, RoundingMode.HALF_UP);*/
+		fields.setField("monto_total", String.valueOf(montoT));
+		div = capital/Double.parseDouble(productVO.getTerm());
+		interes = capital*((Double.parseDouble(productVO.getFactor())/100)/2);
+		iva = interes * 0.16;
+		parcialides =  div + interes + iva;
+		parcialides = round(parcialides, 2);
+		fields.setField("parcialidades", String.valueOf(parcialides));
+		
+		//
+		
+		//
 
 		return fields;
 	}
@@ -541,7 +568,7 @@ public class ReportePDF extends HttpServlet {
 		fields.setField("destino", creditVO.getDestination());
 		fields.setField("destino_descripcion", creditVO.getDebt());
 		fields.setField("periodicidad", creditVO.getPeriodicity());
-		//fields.setField("", creditVO.getCity());
+		fields.setField("ciudadyestado_fecha", creditVO.getCity());
 		//fields.setField("", creditVO.getDate());
 		
 		return fields;
@@ -576,5 +603,14 @@ public class ReportePDF extends HttpServlet {
 			LOGGER.info("Error al convertir fechas " + e);
 		}
 		return date;
+	}
+	
+	private double round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+
+	    long factor = (long) Math.pow(10, places);
+	    value = value * factor;
+	    long tmp = Math.round(value);
+	    return (double) tmp / factor;
 	}
 }
