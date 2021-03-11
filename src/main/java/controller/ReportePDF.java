@@ -49,6 +49,8 @@ public class ReportePDF extends HttpServlet {
 	private static Utilerias utilerias = new Utilerias();
 	private static NumeroLetras numeroLetras = new NumeroLetras();
 	private static DecimalFormat df2 = new DecimalFormat("#.00");
+	
+	public String atnWebClientsURL = "https://atn-web-clients.herokuapp.com";
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
@@ -80,7 +82,7 @@ public class ReportePDF extends HttpServlet {
 			// Valida que al obtener el parametro traiga un valor diferente de "" o null
 			if (!idCliente.equals("") || idCliente != null) {
 				// Arma la url para realizar la petición concatenando el id recibido
-				URL url = new URL("http://127.0.0.1:3333/getClientJSON/".concat(idCliente));
+				URL url = new URL( atnWebClientsURL + "/getClientJSON/".concat(idCliente));
 				// Realiza la peticion concatenando el id que recibe del request para obtener
 				// los datos del cliente
 				HttpURLConnection conn = (HttpURLConnection) url.openConnection();
